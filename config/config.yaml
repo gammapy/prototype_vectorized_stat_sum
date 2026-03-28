@@ -1,0 +1,45 @@
+general:
+  log:
+      # choose one of the example values for level
+      level: INFO            
+      format: "%(asctime)s  %(levelname)-8s  %(message)s"
+      datefmt: "%H:%M:%S"
+  outdir: "data"
+
+observations:
+  datastore: "$GAMMAPY_DATA/hess-dl3-dr1"
+  obs_ids: []
+  obs_cone: {frame: icrs, lon: 329.7 deg, lat: -30.2 deg, radius: 2.0 deg}
+  obs_time: {start: '2006-07-29', stop: '2006-07-30'}
+
+datasets:
+  type: "1d"
+  stack: false   # One dataset per observation
+  geom:
+    axes:
+      energy:
+        min: "0.1 TeV"
+        max: "20 TeV"
+        nbins: 15
+      energy_true:
+        min: "0.05 TeV"
+        max: "30 TeV"
+        nbins: 30
+  on_region:
+    frame: icrs
+    lon: "329.7 deg"   # PKS 2155-304 RA
+    lat: "-30.2 deg"   # PKS 2155-304 Dec
+    radius: "0.11 deg"
+  containment_correction: true
+  safe_mask:
+    methods: ["aeff-default", "edisp-bias"]
+    parameters:
+      bias_percent: 10.0
+  background:
+    method: "reflected"
+    exclusion: null
+
+fit:
+  fit_range:
+    min: "0.3 TeV"
+    max: "15 TeV"
