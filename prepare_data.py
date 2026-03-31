@@ -101,9 +101,7 @@ def run_fit(analysis: Analysis, models: Models) -> Fit:
     alpha_norm_ref.min = 0.5
     alpha_norm_ref.max = 2.
     alpha_norm_ref.frozen = False
-    for model in models[1:]:
-        model.spectral_model.model2.alpha_norm = alpha_norm_ref
-
+    
     log.info("Starting joint fit over %d dataset(s) …", len(analysis.datasets))
  
     result = fit.run(analysis.datasets)
@@ -182,7 +180,7 @@ def main(
     config = AnalysisConfig.read(config)
     analysis = Analysis(config)
     analysis.get_observations()
-    analysis.get_datasets()  #analysis = build_datasets(str(config))
+    analysis.get_datasets()  
 
     effective_outdir = Path(analysis.config.general.outdir)
 
