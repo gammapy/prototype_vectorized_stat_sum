@@ -15,8 +15,8 @@ class NPredEvaluator:
         return np.rollaxis(vals, -1, 2)
     
 
-    def compute_integrated_spectrum(self, *args):
-        """Integrate spectrum pver parameters arrays."""
+    def compute_integrated_spectrum(self, args):
+        """Integrate spectrum over parameters arrays."""
         energy_true = self.energy_true.edges
 
         values = integrate_spectrum(
@@ -29,18 +29,18 @@ class NPredEvaluator:
         return values
 
         
-    def evaluate(self, *args):
-        values = self.compute_integrated_spectrum(*args)
+    def evaluate(self, args):
+        values = self.compute_integrated_spectrum(args)
         values = self.exposure.quantity.T[...,np.newaxis]*values
         return self._apply_edisp(values, self.matrix)
 
     
-    def compute_npred(self):
-        kwargs = {par.name: par.quantity for par in self.model.parameters}
-        kwargs = self.model._convert_evaluate_unit(kwargs, self.energy_true)
-        args = list(kwargs.values())
+    def compute_npred(self, args):
+        # kwargs = {par.name: par.quantity for par in self.model.parameters}
+        # kwargs = self.model._convert_evaluate_unit(kwargs, self.energy_true)
+        # args = list(kwargs.values())
 
-        return self.evaluate(*args)
+        return self.evaluate(args)
      
     
     

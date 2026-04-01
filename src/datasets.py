@@ -1,6 +1,8 @@
 from gammapy.datasets import SpectrumDatasetOnOff, SpectrumDataset
 from gammapy.maps import Map
 from gammapy.modeling.models import DatasetModels, FoVBackgroundModel
+
+from .fit_statistics import WStatVecFitStatistic
 from .evaluator import NPredEvaluator
 
 class VectorizedMixin:
@@ -9,7 +11,7 @@ class VectorizedMixin:
    
     It must be placed left of the base Dataset class in MRO so its
     models setter and npred_signal/stat_sum take priority.
-    """   
+    """
 
     @property
     def models(self):
@@ -38,7 +40,7 @@ class VectorizedMixin:
         """Model evaluators."""
         return self._evaluators
 
-    def npred_signal(self):
+    def npred_signal(self, args):
         """Model predicted signal counts.
 
         If a list of model name is passed, predicted counts from these components are returned.
@@ -51,15 +53,18 @@ class VectorizedMixin:
         npred_sig : `gammapy.maps.Map`
             Map of the predicted signal counts.
         """
-        npred_total = Map.from_geom(self._geom, dtype=float)
+        npred_total = 0
 
         evaluators = self.evaluators
 
         for evaluator_name, evaluator in evaluators.items():
-            npred = evaluator.compute_npred()
-            npred_total.stack(npred)
+            npred = evaluator.compute_npred(args)
+            npred_total += npred
             
         return npred_total
+
+    def _stat_sum_likelihood(self, args):
+        return WStatVecFitStatistic.stat_sum_dataset(self, args)
 
 
 class VecSpectrumDataset(VectorizedMixin, SpectrumDataset):
