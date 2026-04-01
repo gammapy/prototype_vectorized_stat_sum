@@ -1,9 +1,24 @@
-from gammapy.datasets import SpectrumDatasetOnOff, SpectrumDataset
-from gammapy.maps import Map
+from gammapy.datasets import SpectrumDatasetOnOff, SpectrumDataset, Datasets
+import numpy as np
 from gammapy.modeling.models import DatasetModels, FoVBackgroundModel
 
 from .fit_statistics import WStatVecFitStatistic
 from .evaluator import NPredEvaluator
+
+
+def broadcast_parameters(self, args):
+    free_parameters = self.models.parameters.free_unique_parameters
+    parameters = self.models.parameters.unique_parameters
+    frozen_parameters = set(parameters) - set(free_parameters)
+    n_values = len(args[0])
+    index_arguments = {}
+    for par, arg in zip(free_parameters, args):
+        index_arguments[par] = arg * par.unit
+    for par in frozen_parameters:
+        index_arguments[par] = np.ones(shape=(n_values))*par.quantity
+    return index_arguments
+
+Datasets.broadcast_parameters = broadcast_parameters
 
 class VectorizedMixin:
     """
