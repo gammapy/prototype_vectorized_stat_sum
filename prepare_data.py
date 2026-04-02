@@ -138,7 +138,7 @@ EBL_CHOICES = click.Choice(["dominguez", "franceschini", "finke"], case_sensitiv
 @click.command(context_settings={"help_option_names": ["-h", "--help"]})
 @click.option(
     "--config", "-c",
-    default="config.yaml",
+    default="config/config.yaml",
     show_default=True,
     type=click.Path(dir_okay=False, path_type=Path),
     help="Path to the YAML analysis config.",
