@@ -1,7 +1,7 @@
 import numpy as np
 from gammapy.modeling.models import integrate_spectrum
 
-class NPredEvaluator:
+class NPredVecEvaluator:
     def __init__(self, model, dataset):
         self.energy_true = dataset.exposure.geom.axes["energy_true"]
         self.energy = dataset.counts.geom.axes["energy"] 

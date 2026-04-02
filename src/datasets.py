@@ -1,9 +1,12 @@
-from gammapy.datasets import SpectrumDatasetOnOff, SpectrumDataset, Datasets
+from gammapy.datasets import SpectrumDatasetOnOff, SpectrumDataset, Datasets, FluxPointsDataset
 import numpy as np
 from gammapy.modeling.models import DatasetModels, FoVBackgroundModel
 
+from gammapy.datasets.flux_points import _get_reference_model
+
+from fit_statistics import Chi2VecFitStatistic
 from .fit_statistics import WStatVecFitStatistic
-from .evaluator import NPredEvaluator
+from .evaluator import NPredVecEvaluator
 
 
 def broadcast_parameters(self, args):
@@ -20,7 +23,7 @@ def broadcast_parameters(self, args):
 
 Datasets.broadcast_parameters = broadcast_parameters
 
-class VectorizedMixin:
+class VecNPredMixin:
     """
     Mixin class to replace stat_sum evaluation with vectorization.
    
@@ -42,7 +45,7 @@ class VectorizedMixin:
             models = models.select(datasets_names=self.name)
             for model in models:
                 if not isinstance(model, FoVBackgroundModel):
-                    evaluator = NPredEvaluator(
+                    evaluator = NPredVecEvaluator(
                         model=model,
                         dataset=self
                     )
@@ -82,8 +85,33 @@ class VectorizedMixin:
         return WStatVecFitStatistic.stat_sum_dataset(self, args)
 
 
-class VecSpectrumDataset(VectorizedMixin, SpectrumDataset):
+class VecFluxPointsMixin:
+    """
+    Mixin class to replace stat_sum evaluation with vectorization.
+
+    It must be placed left of the base Dataset class in MRO so its
+    models setter and npred_signal/stat_sum take priority.
+    """
+
+    def flux_pred(self, args):
+        """Compute predicted flux."""
+        flux = 0.0
+        import numpy as np
+        for model in self.models:
+            reference_model = _get_reference_model(model, self._energy_bounds)
+            flux += reference_model.evaluate(self.data.energy_ref[:, np.newaxis], *args)
+        return flux[:, np.newaxis, np.newaxis, :]
+
+    def _stat_sum_likelihood(self, args):
+        """Total statistic at arbitrary parameters without the priors."""
+        return Chi2VecFitStatistic.stat_sum_dataset(self, args)
+
+
+class VecSpectrumDataset(VecNPredMixin, SpectrumDataset):
     tag = "VecSpectrumDataset"
 
-class VecSpectrumDatasetOnOff(VectorizedMixin, SpectrumDatasetOnOff):
+class VecSpectrumDatasetOnOff(VecNPredMixin, SpectrumDatasetOnOff):
     tag = "VecSpectrumDatasetOnOff"
+
+class VecFluxPointsDataset(VecFluxPointsMixin, FluxPointsDataset):
+    tag = "VecFluxPointsDataset"

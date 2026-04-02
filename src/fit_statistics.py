@@ -1,7 +1,18 @@
 from gammapy.stats.fit_statistics import FitStatistic, wstat
 import numpy as np
 
-class WStatVecFitStatistic(FitStatistic):
+
+class VecFitStatisticMixin:
+    @classmethod
+    def stat_sum_dataset(cls, dataset, args):
+        """Statistic function value per bin for some specific parameters."""
+        stat_array = cls.stat_array_dataset(dataset, args)
+        if dataset.mask is not None:
+            stat_array = stat_array[:, dataset.mask.data]
+        return np.sum(stat_array, axis=1)
+
+
+class WStatVecFitStatistic(VecFitStatisticMixin, FitStatistic):
     """Vectorized WStat fit statistic class for ON-OFF Poisson measurements."""
 
     @classmethod
@@ -21,13 +32,18 @@ class WStatVecFitStatistic(FitStatistic):
         )
         return np.nan_to_num(on_stat_)
 
+
+class Chi2VecFitStatistic(VecFitStatisticMixin, FitStatistic):
+    """Chi2 fit statistic class for measurements with gaussian symmetric errors."""
+
     @classmethod
-    def stat_sum_dataset(cls, dataset, args):
-        """Statistic function value per bin for some specific parameters."""
-        if dataset.counts_off is None and not np.any(dataset.mask_safe.data):
-            return 0
-        else:
-            stat_array = cls.stat_array_dataset(dataset, args)
-            if dataset.mask is not None:
-                stat_array = stat_array[:, dataset.mask.data]
-            return np.sum(stat_array, axis=1)
+    def stat_array_dataset(cls, dataset, args):
+        """Statistic function value per bin for specific model parameters."""
+        model = dataset.flux_pred(args)
+        data = dataset.data.dnde.quantity
+        try:
+            sigma = dataset.data.dnde_err.quantity
+        except AttributeError:
+            sigma = (dataset.data.dnde_errn + dataset.data.dnde_errp).quantity / 2
+        stat_array = ((data[:, :, :, None] - model) / sigma[:, :, :, None]).to_value("") ** 2
+        return np.moveaxis(stat_array, -1, 0)
