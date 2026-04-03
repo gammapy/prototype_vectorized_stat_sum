@@ -79,7 +79,7 @@ class VecNPredMixin:
             npred = evaluator.compute_npred(args)
             npred_total += npred
             
-        return npred_total
+        return npred_total.T
 
     def _stat_sum_likelihood(self, args):
         return WStatVecFitStatistic.stat_sum_dataset(self, args)
@@ -96,19 +96,14 @@ class VecFluxPointsMixin:
     def flux_pred(self, args):
         """Compute predicted flux."""
         flux = 0.0
-        import numpy as np
         for model in self.models:
             reference_model = _get_reference_model(model, self._energy_bounds)
-            flux += reference_model.evaluate(self.data.energy_ref[:, np.newaxis], *args)
-        return flux[:, np.newaxis, np.newaxis, :]
+            flux += reference_model.evaluate(self.data.energy_ref[:, None], *args)
+        return flux[None, None, :, :]
 
     def _stat_sum_likelihood(self, args):
         """Total statistic at arbitrary parameters without the priors."""
         return Chi2VecFitStatistic.stat_sum_dataset(self, args)
-
-
-class VecSpectrumDataset(VecNPredMixin, SpectrumDataset):
-    tag = "VecSpectrumDataset"
 
 class VecSpectrumDatasetOnOff(VecNPredMixin, SpectrumDatasetOnOff):
     tag = "VecSpectrumDatasetOnOff"

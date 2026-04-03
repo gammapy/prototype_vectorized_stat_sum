@@ -16,19 +16,19 @@ class WStatVecFitStatistic(VecFitStatisticMixin, FitStatistic):
     """Vectorized WStat fit statistic class for ON-OFF Poisson measurements."""
 
     @classmethod
-    def stat_array_dataset(cls, dataset, *args):
+    def stat_array_dataset(cls, dataset, args):
         """Statistic function value per bin given for some specific parameters."""
         counts, counts_off, alpha = (
             dataset.counts.data,
             dataset.counts_off.data,
             dataset.alpha.data,
         )
-        npred_signal = dataset.npred_signal(*args)
+        npred_signal = dataset.npred_signal(args)
         on_stat_ = wstat(
             n_on=counts,
             n_off=counts_off,
             alpha=alpha,
-            mu_sig=npred_signal.T,
+            mu_sig=npred_signal,
         )
         return np.nan_to_num(on_stat_)
 
@@ -39,11 +39,11 @@ class Chi2VecFitStatistic(VecFitStatisticMixin, FitStatistic):
     @classmethod
     def stat_array_dataset(cls, dataset, args):
         """Statistic function value per bin for specific model parameters."""
-        model = dataset.flux_pred(args)
+        model = dataset.flux_pred(args).T
         data = dataset.data.dnde.quantity
         try:
             sigma = dataset.data.dnde_err.quantity
         except AttributeError:
             sigma = (dataset.data.dnde_errn + dataset.data.dnde_errp).quantity / 2
-        stat_array = ((data[:, :, :, None] - model) / sigma[:, :, :, None]).to_value("") ** 2
-        return np.moveaxis(stat_array, -1, 0)
+        stat_array = ((data[None, :, :, :] - model) / sigma[None, :, :, :]).to_value("") ** 2
+        return stat_array

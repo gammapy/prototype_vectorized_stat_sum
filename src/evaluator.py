@@ -36,10 +36,6 @@ class NPredVecEvaluator:
 
     
     def compute_npred(self, args):
-        # kwargs = {par.name: par.quantity for par in self.model.parameters}
-        # kwargs = self.model._convert_evaluate_unit(kwargs, self.energy_true)
-        # args = list(kwargs.values())
-
         return self.evaluate(args)
      
     

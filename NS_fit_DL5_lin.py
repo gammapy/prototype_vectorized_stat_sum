@@ -19,7 +19,6 @@ for idx, model in enumerate(models):
     datasets.append(dataset)
 
 datasets = Datasets(datasets)
-datasets.models = models
 
 ref_par = models.parameters["alpha_norm"]
 ref_par.frozen = False
@@ -27,9 +26,9 @@ for mod in models[1:]:
     mod.spectral_model.model2.alpha_norm = ref_par
     mod.spectral_model.model1.index2.frozen = True
 
-    # mod.spectral_model.model1.index1.frozen = True
-    # mod.spectral_model.model1.ebreak.frozen = True
-    # mod.spectral_model.model1.amplitude.frozen = True
+    mod.spectral_model.model1.index1.frozen = True
+    mod.spectral_model.model1.ebreak.frozen = True
+    mod.spectral_model.model1.amplitude.frozen = True
 
 free_parameters = models.parameters.free_unique_parameters
 for par in free_parameters:

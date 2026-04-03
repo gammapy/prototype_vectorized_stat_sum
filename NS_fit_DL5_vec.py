@@ -19,7 +19,6 @@ for idx, model in enumerate(models):
     datasets.append(dataset)
 
 datasets = Datasets(datasets)
-datasets.models = models
 
 ref_par = models.parameters["alpha_norm"]
 ref_par.frozen = False
